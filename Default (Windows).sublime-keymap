@@ -1,7 +1,6 @@
 [
 	{ "keys": ["ctrl+f1"], "command": "mail_file" },
 	{ "keys": ["shift+f1"], "command": "mail_file", "args": {"cmd": "hist_list"} },
-	{ "keys": ["ctrl+shift+f1"], "command": "mail_file", "args": {"recipients": "_coders_oh_snap_yo_664767@zenimax.com", "subject": "Five-One for Guy Carver"} },
 	{ "keys": ["up"], "command": "mail_file", "args": {"cmd": "hist_up"}, "context":
 		[
 			{ "key": "mailpanel" }

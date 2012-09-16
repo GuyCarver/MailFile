@@ -149,6 +149,8 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
     vw = self.view
     s = vw.sel()[0]
     fileName = lambda v : v.name() if v.name() else v.file_name()
+    #if a selection is made then send it.
+    #TODO: compile all selected text and send it.
     if s.a != s.b :
       if len(subject) == 0 :
         subject = "Here is a snippet from file: " + fileName(vw)

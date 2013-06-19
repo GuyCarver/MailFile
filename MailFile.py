@@ -1,9 +1,14 @@
 import sublime, sublime_plugin
 import sys, smtplib, functools, collections
 from email.mime.text import MIMEText
+from Edit.edit import Edit
 
 sets_file = "MailFile.sublime-settings"
-mf_settings = sublime.load_settings(sets_file)
+mf_settings = None
+
+def plugin_loaded(  ) :
+  global mf_settings
+  mf_settings = sublime.load_settings(sets_file)
 
 def SendMail( aRecipients, aSubject, aMessage ) :
   sender = mf_settings.get("from", "")
@@ -33,7 +38,6 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
 
   def __init__( self, aView ) :
     super(MailFileCommand, self).__init__(aView)
-
     self.inputView = None
 
     MaxHist = mf_settings.get("maxhist", 20)
@@ -71,9 +75,8 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
       #Position of search start is either at the beginning or the last semicolon.
       search = (keep + 1) if keep != -1 else 0
 
-      edit = vw.begin_edit("histchange")
-      vw.replace(edit, sublime.Region(search, ext), addr)
-      vw.end_edit(edit)
+      with Edit(vw) as edit:
+        edit.replace(sublime.Region(search, ext), addr)
 
   def HistUp( self ) :
     self.MoveHist(1)
@@ -95,7 +98,7 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
     #End search at cursor or selection begin.
     srch = unicode(vw.substr(sublime.Region(search, selStart)).strip(' '))
 
-    print bNext
+    # print(bNext)
 
     hsize = len(self.History)                             #Number of items to search.
 
@@ -107,19 +110,18 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
       n = self.History[hi]
       #If the history item begins with the search text then we found a match.
       if n.find(srch) == 0 :
-        edit = vw.begin_edit("histchange")
-        vw.replace(edit, sublime.Region(search, vw.size()), n)
-        vw.sel().clear()                                  #Clear previous selections.
-        vw.sel().add(sublime.Region(selStart, vw.size())) # and add selection for new text.
-        vw.end_edit(edit)
+        with Edit(vw) as edit :
+          edit.replace(sublime.Region(search, vw.size()), n)
+          vw.sel().clear()                                  #Clear previous selections.
+          vw.sel().add(sublime.Region(selStart, vw.size())) # and add selection for new text.
         self.HistIndex = hi                               #Next index for next search.
         break
 
     MailFileCommand.Processing = False
 
   def HistList( self ) :
-    print "MailFile History: %d" % len(self.History)
-    print self.History
+    print("MailFile History: " + str(len(self.History)))
+    print(self.History)
 
   def SaveHistory( self ) :
     histList = [ h for h in self.History ]
@@ -129,7 +131,7 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
   def UpdateHistory( self, aRecipients ) :
     rlist = aRecipients.split(";")
     for r in rlist :
-      rs = unicode(r.strip(' '))
+      rs = r.strip(' ')
       try:
         self.History.remove(rs)
       except:
@@ -160,7 +162,13 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
         subject = "Here is file: " + fileName(vw)
       wholeFileReg = sublime.Region(0, vw.size() - 1)
       message = vw.substr(wholeFileReg)
-    SendMail(recipients, subject, message)
+
+    iview = self.view.window().show_input_panel("E-Mail Subject:",
+        subject, functools.partial(self.OnSubjectDone, recipients, message), None, self.OnCancel)
+    iview.set_name("MailSubject")
+
+  def OnSubjectDone( self, aRecipients, aMessage, aSubject ):
+    SendMail(aRecipients, aSubject, aMessage)
 
   @classmethod
   def IsActive( aClass, aView, aKey, aOperator, aOperand ) :
@@ -176,9 +184,9 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
   def TryComplete( aClass, aView ) :
     ###If mail recipient input is active try to auto complete any input.
     if aClass.Active and aClass.Active.IsInputView(aView) and not aClass.Processing :
-      print "TryComplete"
+      # print("TryComplete")
       aClass.Active.HistMatch(False)
-      print "TryCompleteEnd"
+      # print("TryCompleteEnd")
 
 #List of run command types (Note show is not in this list  It is parsed separately).
 MailFileCommand.Commands = { "hist_up" : MailFileCommand.HistUp,

@@ -1,4 +1,4 @@
-# Sublime Text 2 MailFile Package adding smtp e-mail support for e-mailing selections or files.
+# Sublime Text MailFile Package adding smtp e-mail support for e-mailing selections or files.
 
 ## Install
 

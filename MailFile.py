@@ -96,19 +96,21 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
     search = (keep + 1) if keep != -1 else 0
 
     #End search at cursor or selection begin.
-    srch = unicode(vw.substr(sublime.Region(search, selStart)).strip(' '))
+    srch = (vw.substr(sublime.Region(search, selStart)).strip(' '))
 
-    # print(bNext)
+#     print(srch)
 
     hsize = len(self.History)                             #Number of items to search.
+#     print(str(self.History) + ", " + str(hsize))
 
-    start = 1 if bNext else 0
+    start = 1 if (bNext and hsize > 1) else 0
 
     #Loop for items starting at next in history.
     for i in range(start, hsize):
       hi = (self.HistIndex + i) % hsize                   #Wrap index to beginning.
       n = self.History[hi]
       #If the history item begins with the search text then we found a match.
+#       print(str(i) + " of " + str(hsize) + " " + n + " has? " + srch)
       if n.find(srch) == 0 :
         with Edit(vw) as edit :
           edit.replace(sublime.Region(search, vw.size()), n)
@@ -120,8 +122,9 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
     MailFileCommand.Processing = False
 
   def HistList( self ) :
-    print("MailFile History: " + str(len(self.History)))
-    print(self.History)
+    pass
+#     print("MailFile History: " + str(len(self.History)))
+#     print(self.History)
 
   def SaveHistory( self ) :
     histList = [ h for h in self.History ]
@@ -184,9 +187,9 @@ class MailFileCommand( sublime_plugin.TextCommand ) :
   def TryComplete( aClass, aView ) :
     ###If mail recipient input is active try to auto complete any input.
     if aClass.Active and aClass.Active.IsInputView(aView) and not aClass.Processing :
-      # print("TryComplete")
+#       print("TryComplete")
       aClass.Active.HistMatch(False)
-      # print("TryCompleteEnd")
+#       print("TryCompleteEnd")
 
 #List of run command types (Note show is not in this list  It is parsed separately).
 MailFileCommand.Commands = { "hist_up" : MailFileCommand.HistUp,
